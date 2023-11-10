@@ -12,5 +12,9 @@ void ParsearDireccion(unsigned int addr, int *ETQ, int*palabra, int *linea, int 
 void TratarFallo(T_CACHE_LINE *tbl, char *MRAM, int ETQ,int linea, int bloque);
 
 int main(){
-	printf("hola mundo");
+	int num1 = 1;
+	int num2 = 2;
+	int suma = num1+num2;
+
+	printf("Hola buenas soy saray %d", suma);
 }
