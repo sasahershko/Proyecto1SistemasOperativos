@@ -36,9 +36,7 @@ int main(){
 	{
 			lineaCache.Data[i] = 0x23;
 	}
-
-<<<<<<< Updated upstream
-=======
+  
 	//comprobación del fichero
 	if((ficheroDirMemoria == NULL)  || (ficheroContRAM == NULL) || (ficheroAcessoMemoria == NULL))
 	{
@@ -65,8 +63,6 @@ int main(){
 
 
 	return 0;
-
->>>>>>> Stashed changes
 }
 
 //----------------------------------------------FUNCIONES---------------------------------------------------
