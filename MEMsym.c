@@ -19,6 +19,9 @@ void TratarFallo(T_CACHE_LINE *tbl, char *MRAM, int ETQ,int linea, int bloque);
 
 int main(){
 
+FILE* simul_RAM;
+
+
 }
 
 //----------------------------------------------FUNCIONES---------------------------------------------------
