@@ -31,12 +31,10 @@ int main(){
 	FILE* ficheroContRAM = fopen("CONTENTS_RAM.bin", "r");
 	FILE* ficheroAcessoMemoria = fopen("accesos_memoria.txt", "r");
 	T_CACHE_LINE lineaCache;
-	lineaCache.ETQ = 0xFF;
-	for(int i = 0; i < TAM_LINEA; i++)
-	{
-			lineaCache.Data[i] = 0x23;
-	}
-  
+
+	LimpiarCACHE(lineaCache);
+
+
 	//comprobación del fichero
 	if((ficheroDirMemoria == NULL)  || (ficheroContRAM == NULL) || (ficheroAcessoMemoria == NULL))
 	{
@@ -68,6 +66,12 @@ int main(){
 //----------------------------------------------FUNCIONES---------------------------------------------------
 
 void LimpiarCACHE(T_CACHE_LINE tbl[NUM_FILAS]){
+
+	lineaCache.ETQ = 0xFF;
+	for(int i = 0; i < TAM_LINEA; i++)
+	{
+			lineaCache.Data[i] = 0x23;
+	}
 
 }
 
