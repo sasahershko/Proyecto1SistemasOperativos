@@ -34,24 +34,11 @@ int main(){
 	FILE* ficheroDirMemoria = fopen("dirs_memoria.txt", "r");
 	FILE* ficheroContRAM = fopen("CONTENTS_RAM.bin", "r");
 	FILE* ficheroAcessoMemoria = fopen("accesos_memoria.txt", "r");
-<<<<<<< Updated upstream
-	T_CACHE_LINE lineaCache;
-	lineaCache.ETQ = 0xFF;
-	for(int i = 0; i < TAM_LINEA; i++)
-	{
-			lineaCache.Data[i] = 0x23;
-	}
-  
-	//comprobación del fichero
-	if((ficheroDirMemoria == NULL)  || (ficheroContRAM == NULL) || (ficheroAcessoMemoria == NULL))
-	{
-		printf("Error: algun fichero no existe");
-=======
+
 	T_CACHE_LINE lineaCache[NUM_FILAS];
 	unsigned char Simul_RAM[4096];
 
 	if(FicherosExisten(ficheroAcessoMemoria, ficheroContRAM, ficheroDirMemoria) == -1)
->>>>>>> Stashed changes
 		return(-1);
 
 	
@@ -105,9 +92,6 @@ int main(){
 
 // Esta función sirve para limpiar todas los valores de la cache, tanto de las etiquetas como de los datos.
 void LimpiarCACHE(T_CACHE_LINE tbl[NUM_FILAS]){
-
-<<<<<<< Updated upstream
-=======
 	for(int i =0; i<NUM_FILAS;i++){
 
 		tbl[i].ETQ = 0xFF;
@@ -117,7 +101,6 @@ void LimpiarCACHE(T_CACHE_LINE tbl[NUM_FILAS]){
 			tbl[i].Data[j] = 0x23;
 		}
 	}
->>>>>>> Stashed changes
 }
 
 
