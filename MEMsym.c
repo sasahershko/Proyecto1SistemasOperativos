@@ -1,9 +1,11 @@
 #include <stdio.h>
 #include <stdlib.h>
+#include <sys/wait.h>
+#include <unistd.h>
 
 //----------------------------------------------VGLOBALES---------------------------------------------------
 
-#define TAM_LINEA 3
+#define TAM_LINEA 16
 #define NUM_FILAS 8
 
 //----------------------------------------------ESTRUCTURA---------------------------------------------------
@@ -25,9 +27,14 @@ void CerrarFicheros(FILE* f1, FILE* f2, FILE* f3);
 
 //----------------------------------------------MAIN---------------------------------------------------
 
+
 int main(){
-	int globalTime = 0;
 	int numFallos = 0;
+	int globalTime = 0;
+
+	unsigned int Hex;
+	int ETQ=0, palabra=0, linea=0, bloque=0;
+	int contAccesos = 0;
 	
 	//Aquí se guarda lo que hay dentro del fichero .bin
 
@@ -35,57 +42,47 @@ int main(){
 	FILE* ficheroContRAM = fopen("CONTENTS_RAM.bin", "r");
 	FILE* ficheroAcessoMemoria = fopen("accesos_memoria.txt", "r");
 
-	T_CACHE_LINE lineaCache[NUM_FILAS];
-	unsigned char Simul_RAM[4096];
+
+
+	T_CACHE_LINE lineaCache[NUM_FILAS]; //tbl
+	unsigned char Simul_RAM[4096]; //char *MRAM
 
 	if(FicherosExisten(ficheroAcessoMemoria, ficheroContRAM, ficheroDirMemoria) == -1)
 		return(-1);
 
-	
-	LimpiarCACHE(lineaCache);
 	MeterEnRAM(ficheroContRAM, Simul_RAM);
-
-	unsigned long numBin = 0;
-	unsigned char TEMP = 0xff;
-	unsigned char numHex[3];
-	int contador = 0;
-	//leo el fichero accesos memoria
-	fopen("accesos_memoria.txt", "r");
+	ficheroAcessoMemoria = fopen("accesos_memoria.txt", "r");
 	
-	while((TEMP = getc(ficheroAcessoMemoria)) != '\n'){
-		numHex[contador]= TEMP;
-		contador++;
+	fopen("CONTENTS_RAM.bin", "r");
+
+
+	LimpiarCACHE(lineaCache);
+	while((fscanf(ficheroAcessoMemoria,"%X",&Hex)!=EOF)){
+		ParsearDireccion(Hex, &ETQ, &palabra, &linea, &bloque);	
+
+		if(ETQ != lineaCache[linea].ETQ){
+			numFallos++;
+			globalTime += 20;
+			printf("\n\nHa habido un fallo: fallo nº : %d\n", numFallos);
+			printf("T: %d, Fallo de CACHE %d, ADDR %04X ETQ %X linea %02X palabra %02X bloque %02X\n\n", globalTime, numFallos, Hex, ETQ, linea, palabra, bloque);
+			TratarFallo(lineaCache, Simul_RAM, ETQ, linea, bloque);
+		}
+		printf("\nT: %d, Acierto de CACHE, ADDR %04X ETQ %X linea %02X palabra %02X bloque %02X\n\n", globalTime, Hex, ETQ, linea, palabra, bloque);
+		for(int i = 0; i < NUM_FILAS; i++){
+			printf("%X\tDatos: ", lineaCache[i].ETQ);
+			for(int j = 0; j < TAM_LINEA; j++){
+				printf("%X ", lineaCache[i].Data[j]);
+			}
+			printf("\n");
+		}
+		contAccesos++;
+		//sleep(1);
 	}
-	numBin = strtoul(numHex, NULL, 16);
-	fclose(ficheroAcessoMemoria);
-	/*
-	- Cogemos la primera dirección : 22E
+	printf("\n\n\n");
+	printf("Accesos totales: %d; Fallos %d; Tiempo Medio %f\n\n", contAccesos, numFallos, (float)(globalTime/contAccesos));
+	VolcarCACHE(lineaCache); 
+	fclose(ficheroContRAM);
 
-	- Lo convertimos a binario, los separamos por bits(palabra, linea y etiqueta)
-			separamos los ultimos bits (5) de la etiqueta
-
-	- lo comparamos con la estructura
-	- Si da error se incremeta fallo +1 y tiempo +20, se copia el bloque de de Simul_RAM en la caché y se imprime lo que se esta cargando en la caché
-	
-	*/	
-	
-	//ESTO SE TIENE QUE REPETIR
-	//MIRAR DESPLAZAMIENTOS Y NUMEROS DE BITS EN C
-
-	/*if(lineaCache[0].ETQ == TAM_LINEA)
-	{
-
-	}
-	else
-	{
-		numFallos++;
-		printf("T: %d, Fallo de CACHE %d, ADDR %04X Label %X linea %02Xpalabra %02X bloque %02X", globalTime, numFallos);
-		globalTime += 20;
-	}*/
-	//HASTA AQUÍ
-
-
-	return 0;
 }
 
 //----------------------------------------------FUNCIONES---------------------------------------------------
@@ -105,25 +102,51 @@ void LimpiarCACHE(T_CACHE_LINE tbl[NUM_FILAS]){
 
 
 //Antes de acabar el programa, vuelca los contenidos dentro del fichero .bin
-void VolcarCACHE(T_CACHE_LINE *tbl){
+void VolcarCACHE(T_CACHE_LINE *tbl) {
+    for (int i = 0; i < NUM_FILAS; i++) {
+        //printf("%X", tbl[i].ETQ);
+        for (int j = 0; j < TAM_LINEA*8; j++) {
+            printf("%X", tbl[i].Data[j]);
+        }
+        printf("\n");
+    }
 }
 
+
 void ParsearDireccion(unsigned int addr, int *ETQ, int*palabra, int *linea, int *bloque){
+	
+	//Utilizamos & con la máscara binaria 0b1111 para obtener los últimos 4 bits de la dirección. Estos 4 bits representarán la 
+	//posición de la palabra dentro del bloque de memoria. 
+	*palabra = addr & 0b1111;
+
+	//El operador >>, lo utilizamos para realizar desplazamiento de bits de la dirección addr 4 lugares hacia la derecha. 
+	//(Esto es como dvidir la dirección entre 16(2⁴=16)).
+    *bloque = addr >> 4;
+
+	//Extraemos los últimos 3 bits del bloque
+    *linea = (*bloque & 0b111);
+
+	//Extraemmos los primeros 5 bits del bloque y desplazamos a la derecha 3 posiciones para ajustar estos 5 bits (para colocarlo adecuadamente)
+    *ETQ = (*bloque & 0b11111000)>>3;
+	//printf("%i, %i, %i, %i\n", *palabra, *bloque, *linea, *ETQ);
 }
 
 void TratarFallo(T_CACHE_LINE *tbl, char *MRAM, int ETQ,int linea, int bloque){
-}
+	int j = bloque * TAM_LINEA; //tam linea == tam bloque
+	
+	tbl[linea].ETQ = ETQ;
 
+	for(int i = 0; i < TAM_LINEA; i++)
+		tbl[linea].Data[i] = MRAM[i + j];
+}
 
 void MeterEnRAM(FILE* ficheroContRAM, unsigned char Simul_RAM[4096]){
 	char input = '\0';
 	int cont = 0;
 
-	fopen("CONTENTS_RAM.bin", "rb");
+	fopen("CONTENTS_RAM.bin", "r");
 	while((input = getc(ficheroContRAM)) != '\0' && !(feof(ficheroContRAM))){
 		Simul_RAM[cont] = input;
-		printf("%c", Simul_RAM[cont]);
-		//printf("i: %d", cont);	
 		cont++;
 	}
 	fclose(ficheroContRAM);
