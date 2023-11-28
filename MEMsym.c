@@ -1,6 +1,5 @@
 #include <stdio.h>
 #include <stdlib.h>
-#include <sys/wait.h>
 #include <unistd.h>
 
 //----------------------------------------------VGLOBALES---------------------------------------------------
@@ -67,6 +66,7 @@ int main(){
 			printf("T: %d, Fallo de CACHE %d, ADDR %04X ETQ %X linea %02X palabra %02X bloque %02X\n\n", globalTime, numFallos, Hex, ETQ, linea, palabra, bloque);
 			TratarFallo(lineaCache, Simul_RAM, ETQ, linea, bloque);
 		}
+		//hacer lo del array
 		printf("\nT: %d, Acierto de CACHE, ADDR %04X ETQ %X linea %02X palabra %02X bloque %02X\n\n", globalTime, Hex, ETQ, linea, palabra, bloque);
 		for(int i = 0; i < NUM_FILAS; i++){
 			printf("%X\tDatos: ", lineaCache[i].ETQ);
@@ -105,8 +105,8 @@ void LimpiarCACHE(T_CACHE_LINE tbl[NUM_FILAS]){
 void VolcarCACHE(T_CACHE_LINE *tbl) {
     for (int i = 0; i < NUM_FILAS; i++) {
         //printf("%X", tbl[i].ETQ);
-        for (int j = 0; j < TAM_LINEA*8; j++) {
-            printf("%X", tbl[i].Data[j]);
+        for (int j = 0; j < TAM_LINEA; j++) {
+        printf("%c", tbl[i].Data[j]);
         }
         printf("\n");
     }
@@ -129,6 +129,8 @@ void ParsearDireccion(unsigned int addr, int *ETQ, int*palabra, int *linea, int 
 	//Extraemmos los primeros 5 bits del bloque y desplazamos a la derecha 3 posiciones para ajustar estos 5 bits (para colocarlo adecuadamente)
     *ETQ = (*bloque & 0b11111000)>>3;
 	//printf("%i, %i, %i, %i\n", *palabra, *bloque, *linea, *ETQ);
+
+	*bloque = *ETQ * NUM_FILAS;
 }
 
 void TratarFallo(T_CACHE_LINE *tbl, char *MRAM, int ETQ,int linea, int bloque){
@@ -144,10 +146,11 @@ void MeterEnRAM(FILE* ficheroContRAM, unsigned char Simul_RAM[4096]){
 	char input = '\0';
 	int cont = 0;
 
-	fopen("CONTENTS_RAM.bin", "r");
+	fopen("CONTENTS_RAM.bin", "rb");
 	while((input = getc(ficheroContRAM)) != '\0' && !(feof(ficheroContRAM))){
 		Simul_RAM[cont] = input;
 		cont++;
+		printf("%c", Simul_RAM[cont]);
 	}
 	fclose(ficheroContRAM);
 }
