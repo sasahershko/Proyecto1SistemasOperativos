@@ -90,6 +90,7 @@ int main(){
 	for(int i = 0; i <= index; i++){
 		printf("%c", textoRamPalabra[i]);
 	} 
+	printf("\n");
 	fclose(ficheroContRAM);
 
 }
@@ -112,14 +113,18 @@ void LimpiarCACHE(T_CACHE_LINE tbl[NUM_FILAS]){
 
 //Antes de acabar el programa, vuelca los contenidos dentro del fichero .bin
 void VolcarCACHE(T_CACHE_LINE *tbl) {
-    // for (int i = 0; i < NUM_FILAS; i++) {
-    //     //printf("%X", tbl[i].ETQ);
-    //     for (int j = 0; j < TAM_LINEA; j++) {
-    //     printf("%c", tbl[i].Data[j]);
-    //     }
-    //     printf("\n");
-    // }
 
+	FILE* ficheroContentCache = fopen("CONTENTS_CACHE.bin", "w+");
+
+    for (int i = 0; i < NUM_FILAS; i++) {
+        //printf("%X", tbl[i].ETQ);
+    for (int j = 0; j < TAM_LINEA; j++) {
+        fprintf(ficheroContentCache, "%c", tbl[i].Data[j]);
+    }
+        fprintf(ficheroContentCache, "\n");
+    }
+	
+	fclose(ficheroContentCache);
 	
 }
 
