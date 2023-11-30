@@ -93,7 +93,6 @@ int main(){
 	}
 	printf("\n");
 	fclose(ficheroContRAM);
-	fclose(ficheroAcessoMemoria);
 
 }
 
@@ -119,10 +118,9 @@ void VolcarCACHE(T_CACHE_LINE *tbl) {
 	FILE* ficheroContentCache = fopen("CONTENTS_CACHE.bin", "w+");
 
     for (int i = 0; i < NUM_FILAS; i++) {
-        //printf("%X", tbl[i].ETQ);
-    for (int j = 0; j < TAM_LINEA; j++) {
-        fprintf(ficheroContentCache, "%c", tbl[i].Data[j]);
-    }
+   	for (int j = 0; j < TAM_LINEA; j++) {
+        	fprintf(ficheroContentCache, "%c", tbl[i].Data[j]);
+    	}
         fprintf(ficheroContentCache, "\n");
     }
 
