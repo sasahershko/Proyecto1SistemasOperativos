@@ -20,6 +20,7 @@ void LimpiarCACHE(T_CACHE_LINE tbl[NUM_FILAS]);
 void VolcarCACHE(T_CACHE_LINE *tbl);
 void ParsearDireccion(unsigned int addr, int *ETQ, int*palabra, int *linea, int *bloque);
 void TratarFallo(T_CACHE_LINE *tbl, char *MRAM, int ETQ,int linea, int bloque);
+
 char guardarValor(T_CACHE_LINE *tbl, int palabra, int linea);
 void MeterEnRAM(FILE* ficheroContRAM, unsigned char Simul_RAM[4096]);
 int FicherosExisten(FILE* f1, FILE* f2, FILE* f3);
@@ -36,7 +37,7 @@ int main(){
 	int ETQ=0, palabra=0, linea=0, bloque=0;
 	int contAccesos = 0, index = 0;
 	char textoRamPalabra[16];
-	
+
 	//Aquí se guarda lo que hay dentro del fichero .bin
 
 	FILE* ficheroDirMemoria = fopen("dirs_memoria.txt", "r");
@@ -53,13 +54,13 @@ int main(){
 
 	MeterEnRAM(ficheroContRAM, Simul_RAM);
 	ficheroAcessoMemoria = fopen("accesos_memoria.txt", "r");
-	
+
 	fopen("CONTENTS_RAM.bin", "r");
 
 
 	LimpiarCACHE(lineaCache);
 	while((fscanf(ficheroAcessoMemoria,"%X",&Hex)!=EOF)){
-		ParsearDireccion(Hex, &ETQ, &palabra, &linea, &bloque);	
+		ParsearDireccion(Hex, &ETQ, &palabra, &linea, &bloque);
 		if(ETQ != lineaCache[linea].ETQ){
 			numFallos++;
 			globalTime += 20;
@@ -82,16 +83,17 @@ int main(){
 		contAccesos++;
 		sleep(1);
 
-		
+
 	}
 	printf("\n\n\n");
 	printf("Accesos totales: %d; Fallos %d; Tiempo Medio %f\n\n", contAccesos, numFallos, (float)(globalTime/contAccesos));
 	VolcarCACHE(lineaCache);
 	for(int i = 0; i <= index; i++){
 		printf("%c", textoRamPalabra[i]);
-	} 
+	}
 	printf("\n");
 	fclose(ficheroContRAM);
+	fclose(ficheroAcessoMemoria);
 
 }
 
@@ -102,7 +104,7 @@ void LimpiarCACHE(T_CACHE_LINE tbl[NUM_FILAS]){
 	for(int i =0; i<NUM_FILAS;i++){
 
 		tbl[i].ETQ = 0xFF;
-		
+
 		for(int j = 0; j < TAM_LINEA; j++)
 		{
 			tbl[i].Data[j] = 0x23;
@@ -123,27 +125,27 @@ void VolcarCACHE(T_CACHE_LINE *tbl) {
     }
         fprintf(ficheroContentCache, "\n");
     }
-	
+
 	fclose(ficheroContentCache);
-	
+
 }
 
 
 void ParsearDireccion(unsigned int addr, int *ETQ, int*palabra, int *linea, int *bloque){
-	
-	//Utilizamos & con la máscara binaria 0b1111 para obtener los últimos 4 bits de la dirección. Estos 4 bits representarán la 
-	//posición de la palabra dentro del bloque de memoria. 
+
+	//Utilizamos & con la máscara binaria 0b1111 para obtener los últimos 4 bits de la dirección. Estos 4 bits representarán la
+	//posición de la palabra dentro del bloque de memoria.
 	*palabra = addr & 0b1111;
 
-	//El operador >>, lo utilizamos para realizar desplazamiento de bits de la dirección addr 4 lugares hacia la derecha. 
+	//El operador >>, lo utilizamos para realizar desplazamiento de bits de la dirección addr 4 lugares hacia la derecha.
 	//(Esto es como dvidir la dirección entre 16(2⁴=16)).
-    *bloque = addr >> 4;
+    	*bloque = addr >> 4;
 
 	//Extraemos los últimos 3 bits del bloque
-    *linea = (*bloque & 0b111);
+    	*linea = (*bloque & 0b111);
 
 	//Extraemmos los primeros 5 bits del bloque y desplazamos a la derecha 3 posiciones para ajustar estos 5 bits (para colocarlo adecuadamente)
-    *ETQ = (*bloque & 0b11111000)>>3;
+    	*ETQ = (*bloque & 0b11111000)>>3;
 	//printf("%i, %i, %i, %i\n", *palabra, *bloque, *linea, *ETQ);
 
 	*bloque = *ETQ * NUM_FILAS;
@@ -151,7 +153,7 @@ void ParsearDireccion(unsigned int addr, int *ETQ, int*palabra, int *linea, int 
 
 void TratarFallo(T_CACHE_LINE *tbl, char *MRAM, int ETQ,int linea, int bloque){
 	int j = bloque * TAM_LINEA; //tam linea == tam bloque
-	
+
 	tbl[linea].ETQ = ETQ;
 
 	for(int i = 0; i < TAM_LINEA; i++)
@@ -177,7 +179,7 @@ void MeterEnRAM(FILE* ficheroContRAM, unsigned char Simul_RAM[4096]){
 
 //Comprobación del ficheros
 int FicherosExisten(FILE* f1, FILE* f2, FILE* f3){
-	
+
 	if((f1 == NULL)  || (f2 == NULL) || (f3 == NULL))
 	{
 		printf("Error: algun fichero no existe");
